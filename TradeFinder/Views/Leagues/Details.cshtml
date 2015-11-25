@@ -1,0 +1,45 @@
+﻿@model TradeFinder.Models.League
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>League</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Name)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Name)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.UserId)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.UserId)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.AddedOn)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.AddedOn)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Trades", "Index", "Trades", new { id = Model.LeagueId }) |
+    @Html.ActionLink("Teams", "Index", "Teams", new { id = Model.LeagueId }) |
+    @Html.ActionLink("Edit", "Edit", new { id = Model.LeagueId }) |
+    @Html.ActionLink("Delete", "Delete", new { id = Model.LeagueId }) |
+    @Html.ActionLink("Back to List", "Index")
+</p>
