@@ -10,5 +10,8 @@ namespace TradeFinder.Models
         public int LeagueId { get; set; }
         public string Name { get; set; }
         public string UserId { get; set; }
+        public DateTime AddedOn { get; set; }
+        
+        public virtual ICollection<Team> Teams { get; set; }
     }
 }
