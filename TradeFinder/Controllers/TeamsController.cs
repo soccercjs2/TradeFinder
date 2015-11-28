@@ -31,7 +31,7 @@ namespace TradeFinder.Controllers
             return View(viewModel);
         }
 
-        // GET: Teams/Details/TeamId 
+        // GET: Teams/Details/TeamId
         public ActionResult Details(int? id)
         {
             if (id == null)
