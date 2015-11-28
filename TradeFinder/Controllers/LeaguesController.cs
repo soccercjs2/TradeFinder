@@ -50,7 +50,7 @@ namespace TradeFinder.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "LeagueId,Name")] League league)
+        public ActionResult Create([Bind(Include = "LeagueId,Name,UserName,Password")] League league)
         {
             if (ModelState.IsValid)
             {
@@ -84,7 +84,7 @@ namespace TradeFinder.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "LeagueId,Name,UserId,AddedOn")] League league)
+        public ActionResult Edit([Bind(Include = "LeagueId,Name,UserId,AddedOn,UserName,Password")] League league)
         {
             if (ModelState.IsValid)
             {

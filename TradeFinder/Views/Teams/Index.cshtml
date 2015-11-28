@@ -1,0 +1,45 @@
+﻿@model TradeFinder.ViewModels.TeamIndexData
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create", new { Id = Model.League.LeagueId })
+</p>
+<table class="table table-condensed table-hover table-responsive table-striped">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Teams.First().Name)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Teams.First().MyTeam)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Teams.First().AddedOn)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model.Teams) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.Name)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.MyTeam)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.AddedOn)
+        </td>
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { id=item.TeamId }) |
+            @Html.ActionLink("Details", "Details", new { id=item.TeamId }) |
+            @Html.ActionLink("Delete", "Delete", new { id=item.TeamId })
+        </td>
+    </tr>
+}
+
+</table>
