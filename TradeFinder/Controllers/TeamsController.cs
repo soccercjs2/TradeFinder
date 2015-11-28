@@ -59,18 +59,35 @@ namespace TradeFinder.Controllers
         {
             string _login = league.UserName;
             string _password = league.Password;
-            string loginUrl = "http://www.fleaflicker.com/nfl/login";
+            string loginUrl = "http://www.fleaflicker.com/nfl/login"; 
 
-            string URI = loginUrl;
-            string myParameters = "email=soccercjs2%40gmail.com&password=united2";
+            byte[] data = new ASCIIEncoding().GetBytes("email=soccercjs2%40gmail.com&password=united2");
+            HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(loginUrl);
+            httpWebRequest.Method = "POST";
+            httpWebRequest.ContentType = "application/x-www-form-urlencoded";
+            httpWebRequest.ContentLength = data.Length;
+            Stream myStream = httpWebRequest.GetRequestStream();
+            myStream.Write(data, 0, data.Length);
+            myStream.Close();
 
-            using (WebClient wc = new WebClient())
-            {
-                wc.Headers[HttpRequestHeader.ContentType] = "application/x-www-form-urlencoded";
-                string HtmlResult = wc.UploadString(URI, myParameters);
-            }
+            //Build up your post string
+            string postData = "email=soccercjs2%40gmail.com&password=united2";
 
-            return "";
+            //Create a POST WebRequest
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(loginUrl);
+            request.Method = "POST";
+            request.ContentType = "application/x-www-form-urlencoded";
+
+            //Write your post string to the body of the POST WebRequest
+            var sw = new StreamWriter(request.GetRequestStream());
+            sw.Write(postData.ToString());
+            sw.Close();
+
+            //Get the response and read it
+            var response = request.GetResponse();
+            var raw_result_as_string = (new StreamReader(response.GetResponseStream())).ReadToEnd();
+
+            return raw_result_as_string;
         }
 
         // GET: Teams/Create/LeagueId
