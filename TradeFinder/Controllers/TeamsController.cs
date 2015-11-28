@@ -73,7 +73,7 @@ namespace TradeFinder.Controllers
             _yahooContainer = new CookieContainer();
             wrWebRequest.CookieContainer = _yahooContainer;
 
-            // Post to the login form.
+            // Post to the login form. 
             using (StreamWriter swRequestWriter = new StreamWriter(wrWebRequest.GetRequestStream()))
             {
                 swRequestWriter.Write(strPostData);
