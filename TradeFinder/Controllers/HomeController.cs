@@ -23,13 +23,20 @@ namespace TradeFinder.Controllers
             string loginUrl = "http://www.fleaflicker.com/nfl/login";
 
             // name / value pairs. field names should match form elements
-            string data = "email=soccercjs2%40gmail.com&password=united2";
+            string postdata = "email=soccercjs2%40gmail.com&password=united2";
 
-            WebClient webClient = new WebClient();
-            webClient.Headers.Add("Content-Type", "application/x-www-form-urlencoded");
-            byte[] response = webClient.UploadData(
-                loginUrl, "POST", Encoding.ASCII.GetBytes(data)
-            );
+            ASCIIEncoding encoding = new ASCIIEncoding();
+            byte[] data = encoding.GetBytes(postdata);
+
+            // Prepare web request...
+            HttpWebRequest myRequest = (HttpWebRequest)WebRequest.Create(loginUrl);
+            myRequest.Method = "POST";
+            myRequest.ContentType = "application/x-www-form-urlencoded";
+            myRequest.ContentLength = data.Length;
+            Stream newStream = myRequest.GetRequestStream();
+            // Send the data.
+            newStream.Write(data, 0, data.Length);
+            newStream.Close();
 
             return View();
         }
