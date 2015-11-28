@@ -61,16 +61,13 @@ namespace TradeFinder.Controllers
             string _password = league.Password;
             string loginUrl = "http://www.fleaflicker.com/nfl/login";
 
-            using (WebClient client = new WebClient())
+            string URI = loginUrl;
+            string myParameters = "email=soccercjs2%40gmail.com&password=united2";
+
+            using (WebClient wc = new WebClient())
             {
-                WebProxy proxy = new WebProxy();
-                proxy.Address = new Uri("http://4.4.4.4:8888");
-                client.Proxy = proxy;
-                System.Collections.Specialized.NameValueCollection reqparm = new System.Collections.Specialized.NameValueCollection();
-                reqparm.Add("param1", "<any> kinds & of = ? strings");
-                reqparm.Add("param2", "escaping is already handled");
-                byte[] responsebytes = client.UploadValues(loginUrl, "POST", reqparm);
-                string responsebody = Encoding.UTF8.GetString(responsebytes);
+                wc.Headers[HttpRequestHeader.ContentType] = "application/x-www-form-urlencoded";
+                string HtmlResult = wc.UploadString(URI, myParameters);
             }
 
             return "";
