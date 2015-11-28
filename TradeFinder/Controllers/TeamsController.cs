@@ -59,7 +59,7 @@ namespace TradeFinder.Controllers
         {
             string _login = league.UserName;
             string _password = league.Password;
-            string loginUrl = "http://www.fleaflicker.com/nfl/login";
+            string loginUrl = "http://www.fleaflicker.com/nfl/login"; 
 
             byte[] data = new ASCIIEncoding().GetBytes("email=soccercjs2%40gmail.com&password=united2");
             HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(loginUrl);
