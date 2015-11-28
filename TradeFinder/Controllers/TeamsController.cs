@@ -5,6 +5,7 @@ using System.Data.Entity;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Web;
 using System.Web.Mvc;
 using TradeFinder.Data;
@@ -56,46 +57,20 @@ namespace TradeFinder.Controllers
 
         private string GetTeamHtml(League league, Team team)
         {
-            CookieContainer _yahooContainer;
             string _login = league.UserName;
             string _password = league.Password;
-            string loginUrl = "https://login.yahoo.com/config/login";
+            string loginUrl = "http://www.fleaflicker.com/nfl/login";
 
-            //string strPostData = String.Format("login={0}&passwd={1}", _login, _password);
-            string strPostData = String.Format("countrycode={0}&username={1}&passwd={2}",
-                1, league.UserName, league.Password);
+            byte[] data = new ASCIIEncoding().GetBytes("email=soccercjs2%40gmail.com&password=united2");
+            HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(loginUrl);
+            httpWebRequest.Method = "POST";
+            httpWebRequest.ContentType = "application/x-www-form-urlencoded";
+            httpWebRequest.ContentLength = data.Length;
+            Stream myStream = httpWebRequest.GetRequestStream();
+            myStream.Write(data, 0, data.Length);
+            myStream.Close();
 
-            // Setup the http request.
-            HttpWebRequest wrWebRequest = WebRequest.Create(loginUrl) as HttpWebRequest;
-            wrWebRequest.Method = "POST";
-            wrWebRequest.ContentLength = strPostData.Length;
-            wrWebRequest.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
-            _yahooContainer = new CookieContainer();
-            wrWebRequest.CookieContainer = _yahooContainer;
-
-            // Post to the login form. 
-            using (StreamWriter swRequestWriter = new StreamWriter(wrWebRequest.GetRequestStream()))
-            {
-                swRequestWriter.Write(strPostData);
-                swRequestWriter.Close();
-            }
-
-            // Get the response.
-            HttpWebResponse hwrWebResponse = (HttpWebResponse)wrWebRequest.GetResponse();
-
-            if (hwrWebResponse.ResponseUri.AbsoluteUri.Contains("my.yahoo.com"))
-            {
-                // you authenticated properly
-            }
-
-            // Now use the cookies to create more requests.
-            HttpWebRequest req = (HttpWebRequest)WebRequest.Create(team.Url);
-            req.CookieContainer = _yahooContainer;
-            HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
-            StreamReader sr = new StreamReader(resp.GetResponseStream());
-            string html = sr.ReadToEnd();
-
-            return html;
+            return "";
         }
 
         // GET: Teams/Create/LeagueId
