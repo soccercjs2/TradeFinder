@@ -20,24 +20,6 @@ namespace TradeFinder.Controllers
         {
             ViewBag.Message = "Your application description page.";
 
-            string loginUrl = "http://www.fleaflicker.com/nfl/login";
-
-            // name / value pairs. field names should match form elements
-            string postdata = "email=soccercjs2%40gmail.com&password=united2";
-
-            ASCIIEncoding encoding = new ASCIIEncoding();
-            byte[] data = encoding.GetBytes(postdata);
-
-            // Prepare web request...
-            HttpWebRequest myRequest = (HttpWebRequest)WebRequest.Create(loginUrl);
-            myRequest.Method = "POST";
-            myRequest.ContentType = "application/x-www-form-urlencoded";
-            myRequest.ContentLength = data.Length;
-            Stream newStream = myRequest.GetRequestStream();
-            // Send the data.
-            newStream.Write(data, 0, data.Length);
-            newStream.Close();
-
             return View();
         }
 

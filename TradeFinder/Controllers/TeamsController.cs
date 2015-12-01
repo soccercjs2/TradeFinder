@@ -8,9 +8,11 @@ using System.Net;
 using System.Text;
 using System.Web;
 using System.Web.Mvc;
+using System.Web.UI;
 using TradeFinder.Data;
 using TradeFinder.Models;
 using TradeFinder.ViewModels;
+using TradeFinder.Network;
 
 namespace TradeFinder.Controllers
 {
@@ -57,37 +59,52 @@ namespace TradeFinder.Controllers
 
         private string GetTeamHtml(League league, Team team)
         {
-            string _login = league.UserName;
-            string _password = league.Password;
-            string loginUrl = "http://www.fleaflicker.com/nfl/login"; 
-
-            byte[] data = new ASCIIEncoding().GetBytes("email=soccercjs2%40gmail.com&password=united2");
-            HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(loginUrl);
-            httpWebRequest.Method = "POST";
-            httpWebRequest.ContentType = "application/x-www-form-urlencoded";
-            httpWebRequest.ContentLength = data.Length;
-            Stream myStream = httpWebRequest.GetRequestStream();
-            myStream.Write(data, 0, data.Length);
-            myStream.Close();
-
-            //Build up your post string
+            string loginUrl = "http://www.fleaflicker.com/nfl/login";
             string postData = "email=soccercjs2%40gmail.com&password=united2";
+            string html = "";
+            HttpWebRequest webRequest;
+            StreamReader responseReader;
+            string responseData;
+            CookieContainer cookies = new CookieContainer();
+            StreamWriter requestWriter;
 
-            //Create a POST WebRequest
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(loginUrl);
-            request.Method = "POST";
-            request.ContentType = "application/x-www-form-urlencoded";
+            try
+            {
+                //get login  page with cookies
+                webRequest = (HttpWebRequest)WebRequest.Create(loginUrl);
+                webRequest.CookieContainer = cookies;
 
-            //Write your post string to the body of the POST WebRequest
-            var sw = new StreamWriter(request.GetRequestStream());
-            sw.Write(postData.ToString());
-            sw.Close();
+                //recieve non-authenticated cookie
+                webRequest.GetResponse().Close();
 
-            //Get the response and read it
-            var response = request.GetResponse();
-            var raw_result_as_string = (new StreamReader(response.GetResponseStream())).ReadToEnd();
+                //post form  data to page
+                webRequest = (HttpWebRequest)WebRequest.Create(loginUrl);
+                webRequest.Method = WebRequestMethods.Http.Post;
+                webRequest.ContentType = "application/x-www-form-urlencoded";
+                webRequest.CookieContainer = cookies;
+                webRequest.ContentLength = postData.Length;
 
-            return raw_result_as_string;
+                requestWriter = new StreamWriter(webRequest.GetRequestStream());
+                requestWriter.Write(postData);
+                requestWriter.Close();
+
+                //recieve authenticated cookie
+                webRequest.GetResponse().Close();
+
+                //now we get the authenticated page
+                webRequest = (HttpWebRequest)WebRequest.Create(team.Url);
+                webRequest.CookieContainer = cookies;
+                responseReader = new StreamReader(webRequest.GetResponse().GetResponseStream());
+                responseData = responseReader.ReadToEnd();
+                responseReader.Close();
+                html = responseData;
+            }
+            catch
+            {
+
+            }
+
+            return html;
         }
 
         // GET: Teams/Create/LeagueId

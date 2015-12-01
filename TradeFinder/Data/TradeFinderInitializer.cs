@@ -11,7 +11,17 @@ namespace TradeFinder.Data
     {
         protected override void Seed(TradeFinderContext context)
         {
-
+            List<LeagueHost> characters = GetLeagueHostList();
         }
-    }
+
+        private List<LeagueHost> GetLeagueHostList()
+        {
+            List<LeagueHost> leagueHosts = new List<LeagueHost>
+            {
+                new LeagueHost{Name = "FleaFlicker", LoginUrl = "http://www.fleaflicker.com/nfl/login", PostData = "email={0}&password={1}" }
+            };
+
+            return leagueHosts;
+        }
+    }   
 }
