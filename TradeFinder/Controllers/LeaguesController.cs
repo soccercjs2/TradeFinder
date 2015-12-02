@@ -9,6 +9,7 @@ using System.Web.Mvc;
 using TradeFinder.Data;
 using TradeFinder.Models;
 using Microsoft.AspNet.Identity;
+using TradeFinder.ViewModels;
 
 namespace TradeFinder.Controllers
 {
@@ -21,7 +22,15 @@ namespace TradeFinder.Controllers
         public ActionResult Index()
         {
             string currentUser = User.Identity.GetUserId();
-            return View(db.Leagues.Where(l => l.UserId == currentUser).ToList());
+            List<LeagueView> leagueViews = new List<LeagueView>();
+            List<League> leagues = db.Leagues.Where(l => l.UserId == currentUser).ToList();
+
+            foreach (League league in leagues)
+            {
+                leagueViews.Add(new LeagueView(league.LeagueId));
+            }
+
+            return View(leagueViews);
         }
 
         // GET: Leagues/Details/5
@@ -42,6 +51,9 @@ namespace TradeFinder.Controllers
         // GET: Leagues/Create
         public ActionResult Create()
         {
+            List<LeagueHost> leagueHosts = db.LeagueHosts.ToList<LeagueHost>();
+            ViewBag.LeagueHosts = new SelectList(leagueHosts, "LeagueHostId", "Name");
+
             return View();
         }
 
@@ -50,7 +62,7 @@ namespace TradeFinder.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "LeagueId,Name,UserName,Password")] League league)
+        public ActionResult Create([Bind(Include = "LeagueId,LeagueHostId,Name,UserName,Password")] League league)
         {
             if (ModelState.IsValid)
             {

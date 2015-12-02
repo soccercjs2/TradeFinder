@@ -11,7 +11,14 @@ namespace TradeFinder.Data
     {
         protected override void Seed(TradeFinderContext context)
         {
-            List<LeagueHost> characters = GetLeagueHostList();
+            List<LeagueHost> leagueHosts = GetLeagueHostList();
+
+            foreach (LeagueHost leagueHost in leagueHosts)
+            {
+                context.LeagueHosts.Add(leagueHost);
+            }
+
+            context.SaveChanges();
         }
 
         private List<LeagueHost> GetLeagueHostList()

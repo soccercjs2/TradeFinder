@@ -29,7 +29,7 @@ namespace TradeFinder.Controllers
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
 
-            TeamIndexData viewModel = new TeamIndexData(id.GetValueOrDefault());
+            LeagueView viewModel = new LeagueView(id.GetValueOrDefault());
 
             return View(viewModel);
         }

@@ -9,16 +9,18 @@ using TradeFinder.Models;
 
 namespace TradeFinder.ViewModels
 {
-    public class TeamIndexData
+    public class LeagueView
     {
         public League League { get; set; }
+        public LeagueHost LeagueHost { get; set; }
         public List<Team> Teams { get; set; }
 
         private TradeFinderContext db = new TradeFinderContext();
 
-        public TeamIndexData(int leagudId)
+        public LeagueView(int leagudId)
         {
             League = db.Leagues.Find(leagudId);
+            LeagueHost = db.LeagueHosts.Find(League.LeagueHostId);
             Teams = db.Teams.Where(t => t.LeagueId == leagudId).ToList();
         }
     }

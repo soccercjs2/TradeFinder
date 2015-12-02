@@ -12,6 +12,7 @@ namespace TradeFinder.Data
         }
 
         public DbSet<League> Leagues { get; set; }
+        public DbSet<LeagueHost> LeagueHosts { get; set; }
         public DbSet<Team> Teams { get; set; }
         public DbSet<Player> Players { get; set; }
         public DbSet<Quarterback> Quarterbacks { get; set; }
