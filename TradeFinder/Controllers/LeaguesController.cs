@@ -10,6 +10,7 @@ using TradeFinder.Data;
 using TradeFinder.Models;
 using Microsoft.AspNet.Identity;
 using TradeFinder.ViewModels;
+using TradeFinder.NumberFire;
 
 namespace TradeFinder.Controllers
 {
@@ -84,6 +85,9 @@ namespace TradeFinder.Controllers
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
             League league = db.Leagues.Find(id);
+            List<LeagueHost> leagueHosts = db.LeagueHosts.ToList<LeagueHost>();
+            ViewBag.LeagueHosts = new SelectList(leagueHosts, "LeagueHostId", "Name");
+
             if (league == null)
             {
                 return HttpNotFound();
@@ -96,7 +100,7 @@ namespace TradeFinder.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "LeagueId,Name,UserId,AddedOn,UserName,Password")] League league)
+        public ActionResult Edit([Bind(Include = "LeagueId,Name,LeagueHostId,UserId,AddedOn,UserName,Password")] League league)
         {
             if (ModelState.IsValid)
             {

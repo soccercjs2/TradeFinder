@@ -1,0 +1,29 @@
+﻿@model System.Data.DataTable
+
+@{
+    ViewBag.Title = "Quarterback";
+}
+
+<h2>Quarterbacks</h2>
+
+<table border="1" class="table table-condensed table-hover table-responsive table-striped">
+    <thead>
+        <tr>
+            @foreach (System.Data.DataColumn col in Model.Columns)
+            {
+                <th>@col.Caption</th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @foreach(System.Data.DataRow row in Model.Rows)
+        {
+            <tr>
+                @foreach (var cell in row.ItemArray)
+                {
+                    <td>@cell.ToString()</td>
+                }
+            </tr>
+        }
+    </tbody>
+</table>
