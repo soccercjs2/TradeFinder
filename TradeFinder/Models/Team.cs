@@ -62,6 +62,34 @@ namespace TradeFinder.Models
 
                 HtmlDocument document = new HtmlDocument();
                 document.LoadHtml(responseData);
+
+                DataTable
+
+                foreach (DataRow dataRow in )
+
+                if (League.LeagueHost.StarterTableName != null)
+                {
+                    HtmlNode starterTable = document.GetElementbyId(League.LeagueHost.StarterTableName);
+                    foreach (HtmlNode row in starterTable.SelectNodes("./tr"))
+                    {
+
+                    }
+                }
+
+                if (League.LeagueHost.BenchTableName != null)
+                {
+                    HtmlNode benchTable = document.GetElementbyId(League.LeagueHost.BenchTableName);
+                }
+
+                if (League.LeagueHost.KickerTableName != null)
+                {
+                    HtmlNode kickerTable = document.GetElementbyId(League.LeagueHost.KickerTableName);
+                }
+
+                if (League.LeagueHost.DefenseTableName != null)
+                {
+                    HtmlNode defenseTable = document.GetElementbyId(League.LeagueHost.DefenseTableName);
+                }
             }
             catch
             {
