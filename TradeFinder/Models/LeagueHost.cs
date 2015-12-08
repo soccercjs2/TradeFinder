@@ -11,5 +11,11 @@ namespace TradeFinder.Models
         public string Name { get; set; }
         public string LoginUrl { get; set; }
         public string PostData { get; set; }
+        public string StarterTableName { get; set; }
+        public string BenchTableName { get; set; }
+        public string KickerTableName { get; set; }
+        public string DefenseTableName { get; set; }
+
+        public virtual ICollection<League> Leagues { get; set; }
     }
 }

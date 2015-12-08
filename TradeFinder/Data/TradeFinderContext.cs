@@ -6,7 +6,7 @@ namespace TradeFinder.Data
 {
     public class TradeFinderContext : DbContext
     {
-        public TradeFinderContext() : base("TradeFinderContext")
+        public TradeFinderContext() : base("TradeFinderDb")
         {
 
         }

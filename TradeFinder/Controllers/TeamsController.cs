@@ -52,7 +52,7 @@ namespace TradeFinder.Controllers
                 return HttpNotFound();
             }
 
-            ViewBag.Html = GetTeamHtml(league, team);
+            team.GetTeam();
 
             return View(team);
         }
