@@ -20,7 +20,7 @@ namespace TradeFinder.Models
 
         public virtual League League { get; set; }
 
-        public DataTable GetTeam()
+        public DataTable GetTeam(DataTable quarterbacks, DataTable runningBacks, DataTable wideReceivers, DataTable tightEnds)
         {
             HttpWebRequest webRequest;
             StreamReader responseReader;
@@ -63,9 +63,15 @@ namespace TradeFinder.Models
                 HtmlDocument document = new HtmlDocument();
                 document.LoadHtml(responseData);
 
-                DataTable
-
-                foreach (DataRow dataRow in )
+                foreach (DataRow dataRow in quarterbacks.Rows)
+                {
+                    string playerColumn = dataRow["Player"].ToString();
+                    int firstParenIndex = playerColumn.IndexOf("(");
+                    string name = playerColumn.Substring(0, firstParenIndex).Trim(' ');
+                    string position = playerColumn.Substring(firstParenIndex + 1, playerColumn.IndexOf(','));
+                    string team = playerColumn.Substring(playerColumn.IndexOf(",") + 1, playerColumn.IndexOf(')'));
+                    team = team;
+                }
 
                 if (League.LeagueHost.StarterTableName != null)
                 {

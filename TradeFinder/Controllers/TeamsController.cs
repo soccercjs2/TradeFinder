@@ -52,7 +52,7 @@ namespace TradeFinder.Controllers
                 return HttpNotFound();
             }
 
-            team.GetTeam();
+            team.GetTeam((DataTable)Session["Quarterbacks"], (DataTable)Session["RunningBacks"], (DataTable)Session["WideReceivers"], (DataTable)Session["TightEnds"]);
 
             return View(team);
         }
