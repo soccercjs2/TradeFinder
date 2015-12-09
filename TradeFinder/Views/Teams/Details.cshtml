@@ -1,4 +1,4 @@
-﻿@model TradeFinder.Models.Team
+﻿@model TradeFinder.ViewModels.TeamView
 
 @{
     ViewBag.Title = "Details";
@@ -11,41 +11,63 @@
     <hr />
     <dl class="dl-horizontal">
         <dt>
-            @Html.DisplayNameFor(model => model.Name)
+            @Html.DisplayNameFor(model => model.Team.Name)
         </dt>
 
         <dd>
-            @Html.DisplayFor(model => model.Name)
+            @Html.DisplayFor(model => model.Team.Name)
         </dd>
 
         <dt>
-            @Html.DisplayNameFor(model => model.Url)
+            @Html.DisplayNameFor(model => model.Team.Url)
         </dt>
 
         <dd>
-            @Html.DisplayFor(model => model.Url)
+            @Html.DisplayFor(model => model.Team.Url)
         </dd>
 
         <dt>
-            @Html.DisplayNameFor(model => model.MyTeam)
+            @Html.DisplayNameFor(model => model.Team.MyTeam)
         </dt>
 
         <dd>
-            @Html.DisplayFor(model => model.MyTeam)
+            @Html.DisplayFor(model => model.Team.MyTeam)
         </dd>
 
         <dt>
-            @Html.DisplayNameFor(model => model.AddedOn)
+            @Html.DisplayNameFor(model => model.Team.AddedOn)
         </dt>
 
         <dd>
-            @Html.DisplayFor(model => model.AddedOn)
+            @Html.DisplayFor(model => model.Team.AddedOn)
         </dd>
 
     </dl>
+
+    <table border="1" class="table table-condensed table-hover table-responsive table-striped">
+        <thead>
+            <tr>
+                @foreach (System.Data.DataColumn col in Model.TeamTable.Columns)
+            {
+                    <th>@col.Caption</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (System.Data.DataRow row in Model.TeamTable.Rows)
+            {
+                <tr>
+                    @foreach (var cell in row.ItemArray)
+                {
+                        <td>@cell.ToString()</td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
 </div>
 <p>
-    @Html.ActionLink("Edit", "Edit", new { id = Model.TeamId }) |
+    @Html.ActionLink("Edit", "Edit", new { id = Model.Team.TeamId }) |
     @Html.ActionLink("Back to List", "Index")
 </p>
 <p>

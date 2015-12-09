@@ -41,70 +41,14 @@ namespace TradeFinder.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Team team = db.Teams.Find(id);
+            TeamView team = new TeamView(id, (DataTable)Session["Quarterbacks"], (DataTable)Session["RunningBacks"], (DataTable)Session["WideReceivers"], (DataTable)Session["TightEnds"]);
             if (team == null)
             {
                 return HttpNotFound();
             }
-            League league = db.Leagues.Find(team.LeagueId);
-            if (league == null)
-            {
-                return HttpNotFound();
-            }
 
-            team.GetTeam((DataTable)Session["Quarterbacks"], (DataTable)Session["RunningBacks"], (DataTable)Session["WideReceivers"], (DataTable)Session["TightEnds"]);
 
             return View(team);
-        }
-
-        private string GetTeamHtml(League league, Team team)
-        {
-            string loginUrl = "http://www.fleaflicker.com/nfl/login";
-            string postData = "email=soccercjs2%40gmail.com&password=united2";
-            string html = "";
-            HttpWebRequest webRequest;
-            StreamReader responseReader;
-            string responseData;
-            CookieContainer cookies = new CookieContainer();
-            StreamWriter requestWriter;
-
-            try
-            {
-                //get login  page with cookies
-                webRequest = (HttpWebRequest)WebRequest.Create(loginUrl);
-                webRequest.CookieContainer = cookies;
-
-                //recieve non-authenticated cookie
-                webRequest.GetResponse().Close();
-
-                //post form  data to page
-                webRequest = (HttpWebRequest)WebRequest.Create(loginUrl);
-                webRequest.Method = WebRequestMethods.Http.Post;
-                webRequest.ContentType = "application/x-www-form-urlencoded";
-                webRequest.CookieContainer = cookies;
-                webRequest.ContentLength = postData.Length;
-
-                requestWriter = new StreamWriter(webRequest.GetRequestStream());
-                requestWriter.Write(postData);
-                requestWriter.Close();
-
-                //recieve authenticated cookie
-                webRequest.GetResponse().Close();
-
-                //now we get the authenticated page
-                webRequest = (HttpWebRequest)WebRequest.Create(team.Url);
-                webRequest.CookieContainer = cookies;
-                responseReader = new StreamReader(webRequest.GetResponse().GetResponseStream());
-                responseData = responseReader.ReadToEnd();
-                responseReader.Close();
-                html = responseData;
-            }
-            catch
-            {
-
-            }
-
-            return html;
         }
 
         // GET: Teams/Create/LeagueId
