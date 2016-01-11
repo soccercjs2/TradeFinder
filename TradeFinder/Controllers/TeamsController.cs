@@ -13,6 +13,7 @@ using TradeFinder.Data;
 using TradeFinder.Models;
 using TradeFinder.ViewModels;
 using TradeFinder.Network;
+using TradeFinder.NumberFire;
 
 namespace TradeFinder.Controllers
 {
@@ -29,9 +30,16 @@ namespace TradeFinder.Controllers
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
 
-            LeagueView viewModel = new LeagueView(id.GetValueOrDefault());
+            LeagueView leagueView = new LeagueView(id.GetValueOrDefault());
+            string sessionId = HttpContext.Session.SessionID;
 
-            return View(viewModel);
+            if (leagueView.League.CurrentSessionId == sessionId)
+            {
+                NumberFireConnection numberFireConnection = new NumberFireConnection(leagueView.League.LeagueId, sessionId);
+                numberFireConnection.ImportPlayers();
+            }
+
+            return View(leagueView);
         }
 
         // GET: Teams/Details/TeamId

@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Mvc;
 using TradeFinder.Data;
 using TradeFinder.Models;
+using TradeFinder.NumberFire;
 
 namespace TradeFinder.ViewModels
 {

@@ -19,5 +19,6 @@ namespace TradeFinder.Models
         public string Url { get; set; }
 
         public virtual League League { get; set; }
+        public virtual ICollection<Player> Players { get; set; }
     }
 }

@@ -1,0 +1,32 @@
+﻿@model IEnumerable<TradeFinder.Models.Trade>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Trades</h2>
+
+<table class="table table-condensed table-hover table-responsive table-striped">
+    <tr>
+        <th>MyPlayers</th>
+        <th>TheirPlayers</th>
+        <th>MyStartDiff</th>
+        <th>TheirStartDiff</th>
+        <th>MyBenchDiff</th>
+        <th>MyBenchDiff</th>
+        <th>Fiarness</th>
+    </tr>
+    @foreach (var trade in Model)
+    {
+        <tr>
+            <td>@trade.MyPlayers.Name</td>
+            <td>@trade.TheirPlayers.Name</td>
+            <td>@trade.MyStarterDifferential</td>
+            <td>@trade.TheirStarterDifferential</td>
+            <td>@trade.MyBenchDifferential</td>
+            <td>@trade.TheirBenchDifferential</td>
+            <td>@trade.Fairness</td>
+        </tr>
+    }
+</table>
+

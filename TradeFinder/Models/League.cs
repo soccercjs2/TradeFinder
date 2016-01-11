@@ -8,6 +8,7 @@ namespace TradeFinder.Models
     public class League
     {
         public int LeagueId { get; set; }
+        public string CurrentSessionId { get; set; }
         public int LeagueHostId { get; set; }
         public string Name { get; set; }
         public string UserId { get; set; }

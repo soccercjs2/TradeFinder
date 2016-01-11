@@ -5,11 +5,11 @@ using System.Web;
 
 namespace TradeFinder.Models
 {
-    public class Quarterback
+    public class Quarterback : Player
     {
-        public int QuarterbackId { get; set; }
-        public int PlayerId { get; set; }
-        public string PassingAttempts { get; set; }
+        public decimal PassingCompletions { get; set; }
+        public decimal PassingAttempts { get; set; }
+        public decimal PassingYards { get; set; }
         public decimal PassingTouchdowns { get; set; }
         public decimal Interceptions { get; set; }
         public decimal RushingAttempts { get; set; }

@@ -5,10 +5,9 @@ using System.Web;
 
 namespace TradeFinder.Models
 {
-    public class RunningBack
+    public class RunningBack : Player
     {
-        public int RunningBackId { get; set; }
-        public int PlayerId { get; set; }
+        public decimal RushingAttempts { get; set; }
         public decimal RushingYards { get; set; }
         public decimal RushingTouchdowns { get; set; }
         public decimal Receptions { get; set; }

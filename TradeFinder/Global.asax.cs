@@ -21,11 +21,11 @@ namespace TradeFinder
 
         protected void Session_Start()
         {
-            NumberFireConnection numberFireConnection = new NumberFireConnection();
-            Session["Quarterbacks"] = numberFireConnection.Quarterbacks;
-            Session["RunningBacks"] = numberFireConnection.RunningBacks;
-            Session["WideReceivers"] = numberFireConnection.WideReceivers;
-            Session["TightEnds"] = numberFireConnection.TightEnds;
+            //NumberFireConnection numberFireConnection = new NumberFireConnection();
+            //Session["Quarterbacks"] = numberFireConnection.Quarterbacks;
+            //Session["RunningBacks"] = numberFireConnection.RunningBacks;
+            //Session["WideReceivers"] = numberFireConnection.WideReceivers;
+            //Session["TightEnds"] = numberFireConnection.TightEnds;
         }
     }
 }

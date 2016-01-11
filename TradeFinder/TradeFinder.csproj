@@ -191,11 +191,13 @@
     <Compile Include="Controllers\ManageController.cs" />
     <Compile Include="Controllers\PlayersController.cs" />
     <Compile Include="Controllers\TeamsController.cs" />
+    <Compile Include="Controllers\TradesController.cs" />
     <Compile Include="Data\TradeFinderContext.cs" />
     <Compile Include="Data\TradeFinderInitializer.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Models\Trade.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\League.cs" />
@@ -211,6 +213,10 @@
     <Compile Include="Network\HttpRequestResponse.cs" />
     <Compile Include="Network\WebScraper.cs" />
     <Compile Include="NumberFire\NumberFireConnection.cs" />
+    <Compile Include="NumberFire\NumberFireParser.cs" />
+    <Compile Include="PlayerPool\Cartesian.cs" />
+    <Compile Include="PlayerPool\LeaguePlayerPool.cs" />
+    <Compile Include="PlayerPool\TeamPlayerPool.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Startup.cs" />
     <Compile Include="ViewModels\LeagueView.cs" />
@@ -289,6 +295,7 @@
     <Content Include="Views\Players\RunningBacks.cshtml" />
     <Content Include="Views\Players\WideReceivers.cshtml" />
     <Content Include="Views\Players\TightEnds.cshtml" />
+    <Content Include="Views\Trades\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
