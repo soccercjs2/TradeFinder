@@ -36,11 +36,6 @@ namespace TradeFinder.NumberFire
 
         private League _league;
 
-        //public DataTable Quarterbacks { get; set; }
-        //public DataTable RunningBacks { get; set; }
-        //public DataTable WideReceivers { get; set; }
-        //public DataTable TightEnds { get; set; }
-
         public NumberFireConnection(int leagueId, string sessionId)
         {
             _league = db.Leagues.Find(leagueId);
@@ -58,28 +53,20 @@ namespace TradeFinder.NumberFire
             LeaguePlayerPool leaguePlayerPool = new LeaguePlayerPool(_league.LeagueId);
             leaguePlayerPool.SetTeamsPlayers();
             leaguePlayerPool.CalculateTradeValues();
-
-            //LeagueView leageView = new LeagueView(_league.LeagueId);
-
-            ////load teams and set player teams
-            //List<Team> teams = db.Teams.Where(t => t.LeagueId == _league.LeagueId).ToList();
-            //foreach (Team team in teams)
-            //{
-            //    AssignPlayerTeams(team, leageView);
-            //}
-
-            ////calculate trade values
-            //CalculateTradeValues(leageView);
         }
 
         private void ImportQbHtml()
         {
             //get qb data
             string html = "";
-            Thread qbThread = new Thread(() => html = ScrapeBrowser(qbProjectionUrl));
-            qbThread.SetApartmentState(ApartmentState.STA);
-            qbThread.Start();
-            qbThread.Join();
+            //Thread qbThread = new Thread(() => html = ScrapeBrowser(qbProjectionUrl));
+            //qbThread.SetApartmentState(ApartmentState.STA);
+            //qbThread.Start();
+            //qbThread.Join();
+
+            Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+            String path = Directory.GetCurrentDirectory() + "\\Html\\quarterbacks.html";
+            html = File.ReadAllText(path);
 
             //create html object and load html into it
             HtmlAgilityPack.HtmlDocument document = new HtmlAgilityPack.HtmlDocument();
@@ -122,10 +109,14 @@ namespace TradeFinder.NumberFire
         {
             //get rb data
             string html = "";
-            Thread rbThread = new Thread(() => html = ScrapeBrowser(rbProjectionUrl));
-            rbThread.SetApartmentState(ApartmentState.STA);
-            rbThread.Start();
-            rbThread.Join();
+            //Thread rbThread = new Thread(() => html = ScrapeBrowser(rbProjectionUrl));
+            //rbThread.SetApartmentState(ApartmentState.STA);
+            //rbThread.Start();
+            //rbThread.Join();
+
+            Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+            String path = Directory.GetCurrentDirectory() + "\\Html\\runningbacks.html";
+            html = File.ReadAllText(path);
 
             //create html object and load html into it
             HtmlAgilityPack.HtmlDocument document = new HtmlAgilityPack.HtmlDocument();
@@ -166,10 +157,14 @@ namespace TradeFinder.NumberFire
         {
             //get wr data
             string html = "";
-            Thread wrThread = new Thread(() => html = ScrapeBrowser(wrProjectionUrl));
-            wrThread.SetApartmentState(ApartmentState.STA);
-            wrThread.Start();
-            wrThread.Join();
+            //Thread wrThread = new Thread(() => html = ScrapeBrowser(wrProjectionUrl));
+            //wrThread.SetApartmentState(ApartmentState.STA);
+            //wrThread.Start();
+            //wrThread.Join();
+
+            Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+            String path = Directory.GetCurrentDirectory() + "\\Html\\widereceivers.html";
+            html = File.ReadAllText(path);
 
             //create html object and load html into it
             HtmlAgilityPack.HtmlDocument document = new HtmlAgilityPack.HtmlDocument();
@@ -210,10 +205,14 @@ namespace TradeFinder.NumberFire
         {
             //get te data
             string html = "";
-            Thread teThread = new Thread(() => html = ScrapeBrowser(teProjectionUrl));
-            teThread.SetApartmentState(ApartmentState.STA);
-            teThread.Start();
-            teThread.Join();
+            //Thread teThread = new Thread(() => html = ScrapeBrowser(teProjectionUrl));
+            //teThread.SetApartmentState(ApartmentState.STA);
+            //teThread.Start();
+            //teThread.Join();
+
+            Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+            String path = Directory.GetCurrentDirectory() + "\\Html\\tightends.html";
+            html = File.ReadAllText(path);
 
             //create html object and load html into it
             HtmlAgilityPack.HtmlDocument document = new HtmlAgilityPack.HtmlDocument();

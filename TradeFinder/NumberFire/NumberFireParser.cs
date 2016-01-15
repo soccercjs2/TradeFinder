@@ -23,7 +23,7 @@ namespace TradeFinder.NumberFire
         public string GetNameFromNumberFirePlayer(string playerData)
         {
             int firstParenIndex = playerData.IndexOf("(");
-            return playerData.Substring(0, firstParenIndex).Trim(' ');
+            return playerData.Substring(0, firstParenIndex).Replace("\r", "").Replace("\n", "").Trim(' ');
         }
 
         public string GetPositionFromNumberFirePlayer(string playerData)

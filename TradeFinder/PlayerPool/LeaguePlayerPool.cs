@@ -126,7 +126,7 @@ namespace TradeFinder.PlayerPool
         private Player GetBestWaiver(string position)
         {
             return (from player in Players
-                    where player.TeamId == null && player.Position == "QB"
+                    where player.TeamId == null && player.Position == position
                     orderby player.Points descending
                     select player).FirstOrDefault();
         }
@@ -162,52 +162,73 @@ namespace TradeFinder.PlayerPool
             }
         }
 
-        public List<Trade> FindTrades()
+        public List<Trade> FindAllTrades(int myTeamId, int? otherTeamId)
         {
             //create table list to store each trade 
             List<Trade> trades = new List<Trade>();
 
             //get my team and create team player pool
-            Team myTeam = db.Teams.Where(t => t.MyTeam && t.LeagueId == League.LeagueId).FirstOrDefault();
-            TeamPlayerPool myTeamPlayerPool = new TeamPlayerPool(myTeam.TeamId);
+            TeamPlayerPool myTeamPlayerPool = new TeamPlayerPool(myTeamId);
 
-            //get other teams to make trades with
-            List<Team> otherTeams = db.Teams.Where(t => t.LeagueId == League.LeagueId && t.TeamId != myTeam.TeamId).ToList();
+            //create other team list
+            List<Team> otherTeams = new List<Team>();
+            if (otherTeamId != null && otherTeamId > 0)
+            {
+                otherTeams.Add(League.Teams.Where(t => t.TeamId == otherTeamId).FirstOrDefault());
+            }
+            else
+            {
+                otherTeams = League.Teams.ToList();
+                otherTeams.Remove(League.Teams.Where(t => t.TeamId == otherTeamId).FirstOrDefault());
+            }
 
             //for each other team, find trades
             foreach (Team otherTeam in otherTeams)
             {
+                //load team player pool for this team
                 TeamPlayerPool otherTeamPlayerPool = new TeamPlayerPool(otherTeam.TeamId);
-                FindOneForOneTrades(ref trades, myTeamPlayerPool, otherTeamPlayerPool);
+
+                //find trades with this team
+                FindTrades(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.OnePlayerTradePool, otherTeamPlayerPool.OnePlayerTradePool); //1 for 1
+                FindTrades(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.OnePlayerTradePool, otherTeamPlayerPool.TwoPlayerTradePool); //1 for 2
+                FindTrades(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.OnePlayerTradePool, otherTeamPlayerPool.ThreePlayerTradePool); //1 for 3
+                FindTrades(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.TwoPlayerTradePool, otherTeamPlayerPool.OnePlayerTradePool); //2 for 1
+                FindTrades(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.TwoPlayerTradePool, otherTeamPlayerPool.TwoPlayerTradePool); //2 for 2
+                FindTrades(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.TwoPlayerTradePool, otherTeamPlayerPool.ThreePlayerTradePool); //2 for 3
+                FindTrades(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.ThreePlayerTradePool, otherTeamPlayerPool.OnePlayerTradePool); //3 for 1
+                FindTrades(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.ThreePlayerTradePool, otherTeamPlayerPool.TwoPlayerTradePool); //3 for 2
+                FindTrades(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.ThreePlayerTradePool, otherTeamPlayerPool.ThreePlayerTradePool); //3 for 3
             }
 
-            return trades;
+            return trades.OrderByDescending(t => t.CompositeDifferential).Distinct().ToList();
         }
 
-        private void FindOneForOneTrades(ref List<Trade> trades, TeamPlayerPool myTeamPlayerPool, TeamPlayerPool theirTeamPlayerPool)
+        //private void FindOneForOneTrades(ref List<Trade> allTrades, TeamPlayerPool myTeamPlayerPool, TeamPlayerPool theirTeamPlayerPool)
+        //{
+        //    //get team trade pools
+        //    IEnumerable<IEnumerable<Player>> myTradePool = myTeamPlayerPool.OnePlayerTradePool();
+        //    IEnumerable<IEnumerable<Player>> theirTradePool = theirTeamPlayerPool.OnePlayerTradePool();
+
+        //    //find trades with trade pools
+        //    FindTrades(ref allTrades, myTradePool, theirTradePool, myTeamPlayerPool, theirTeamPlayerPool);
+        //}
+
+        private void FindTrades(ref List<Trade> allTrades,
+                                TeamPlayerPool myTeamPlayerPool, TeamPlayerPool theirTeamPlayerPool,
+                                IEnumerable<IEnumerable<Player>> myTradePool, IEnumerable<IEnumerable<Player>> theirTradePool)
         {
-            IEnumerable<Trade> oneForOneTrades =    from myPlayer in myTeamPlayerPool.Players
-                                                    from theirPlayer in theirTeamPlayerPool.Players
-                                                    select (new Trade(myPlayer, theirPlayer));
+            IEnumerable<Trade> trades = from mySideOfTrade in myTradePool
+                                        from theirSideOfTrade in theirTradePool
+                                        select (new Trade(mySideOfTrade, theirSideOfTrade));
 
-            foreach (Trade trade in oneForOneTrades)
+            foreach (Trade trade in trades)
             {
-                if (Math.Abs(trade.Fairness) <= 5) {
-                    trade.CalculateDifferentials(myTeamPlayerPool, theirTeamPlayerPool);
-
-                    trades.Add(trade);
+                if (Math.Abs(trade.Fairness) <= 5)
+                {
+                    trade.CalculateDifferentials(this, myTeamPlayerPool, theirTeamPlayerPool);
+                    if (trade.MyDifferential > 0) { allTrades.Add(trade); }
                 }
             }
-        }
-
-        private IEnumerable<IEnumerable<T>> CartesianProduct<T>(IEnumerable<IEnumerable<T>> sequences)
-        {
-            IEnumerable<IEnumerable<T>> emptyProduct = new[] { Enumerable.Empty<T>() };
-            return sequences.Aggregate(emptyProduct,
-                                      (accumulator, sequence) =>
-                                        from accseq in accumulator
-                                        from item in sequence
-                                        select accseq.Concat(new[] { item }));
         }
     }
 }

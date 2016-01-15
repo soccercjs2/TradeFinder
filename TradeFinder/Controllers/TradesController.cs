@@ -10,6 +10,7 @@ using TradeFinder.Models;
 using TradeFinder.NumberFire;
 using TradeFinder.PlayerPool;
 using TradeFinder.ViewModels;
+//using TradeFinder.ViewModels;
 
 
 namespace TradeFinder.Controllers
@@ -35,9 +36,43 @@ namespace TradeFinder.Controllers
                 numberFireConnection.ImportPlayers();
             }
 
-            LeaguePlayerPool leaguePlayerPool = new LeaguePlayerPool(league.LeagueId);
-            
-            return View(leaguePlayerPool.FindTrades());
+            //create select lists with teams
+            Team myTeam = league.Teams.Where(t => t.MyTeam).FirstOrDefault();
+            SelectList myTeamOptions = new SelectList(league.Teams, "TeamId", "Name");
+            SelectList otherTeamOptions = new SelectList(league.Teams, "TeamId", "Name");
+
+            ViewBag.MyTeamOptions = myTeamOptions;
+            ViewBag.OtherTeamOptions = otherTeamOptions;
+
+            TradeFilterView tradeListView = new TradeFilterView();
+            tradeListView.LeagueId = league.LeagueId;
+            tradeListView.MyTeamId = myTeam.TeamId;
+
+            return View(tradeListView);
+        }
+
+        [HttpPost]
+        public ActionResult Index(TradeFilterView tradeListView)
+        {
+            //create select lists with teams
+            League league = db.Leagues.Find(tradeListView.LeagueId);
+            Team myTeam = league.Teams.Where(t => t.MyTeam).FirstOrDefault();
+            SelectList myTeamOptions = new SelectList(league.Teams, "TeamId", "Name", myTeam.TeamId);
+            SelectList otherTeamOptions = new SelectList(league.Teams, "TeamId", "Name");
+
+            ViewBag.MyTeamOptions = myTeamOptions;
+            ViewBag.OtherTeamOptions = otherTeamOptions;
+
+            if (ModelState.IsValid)
+            {
+                tradeListView.FindTrades();
+
+                return View(tradeListView);
+            }
+            else
+            {
+                return View(tradeListView);
+            }
         }
 
         public string MakeNumberFirePlayer(string player, string position, string team)

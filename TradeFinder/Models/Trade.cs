@@ -7,39 +7,112 @@ using TradeFinder.PlayerPool;
 
 namespace TradeFinder.Models
 {
-    public class Trade
+    public class Trade : IEquatable<Trade>
     {
-        public Player MyPlayers { get; set; }
-        public Player TheirPlayers { get; set; }
-        public decimal MyStarterDifferential { get; set; }
-        public decimal MyBenchDifferential { get; set; }
-        public decimal TheirStarterDifferential { get; set; }
-        public decimal TheirBenchDifferential { get; set; }
+        public IEnumerable<Player> MyPlayers { get; set; }
+        public IEnumerable<Player> TheirPlayers { get; set; }
+        public IEnumerable<Player> MyStartingRoster { get; set; }
+        public IEnumerable<Player> TheirStartingRoster { get; set; }
+        public decimal MyDifferential { get; set; }
+        public decimal TheirDifferential { get; set; }
+        public decimal CompositeDifferential { get; set; }
         public decimal Fairness { get; set; }
+        public string MyNameList { get; set; }
+        public string TheirNameList { get; set; }
 
         public Trade()
         {
 
         }
 
-        public Trade(Player myPlayer, Player theirPlayer)
+        public Trade(IEnumerable<Player> myPlayers, IEnumerable<Player> theirPlayers)
         {
-            MyPlayers = myPlayer;
-            TheirPlayers = theirPlayer;
-            Fairness = myPlayer.TradeValue - theirPlayer.TradeValue;
+            MyPlayers = myPlayers.OrderByDescending(p => p.TradeValue);
+            TheirPlayers = theirPlayers.OrderByDescending(p => p.TradeValue);
+            Fairness = theirPlayers.Sum(p => p.TradeValue) - myPlayers.Sum(p => p.TradeValue);
+            MyNameList = GetPlayersString(MyPlayers);
+            TheirNameList = GetPlayersString(TheirPlayers);
         }
 
-        public void CalculateDifferentials(TeamPlayerPool myTeamPlayerPool, TeamPlayerPool theirTeamPlayerPool)
+        public void CalculateDifferentials(LeaguePlayerPool leaguePlayerPool, TeamPlayerPool myTeamPlayerPool, TeamPlayerPool theirTeamPlayerPool)
         {
-            decimal myStarterDifferential = 0, myBenchDifferential = 0, theirStarterDifferential = 0, theirBenchDifferential = 0;
+            //get new original rosters
+            List<Player> myOriginalStartingRoster = myTeamPlayerPool.OptimalLineUp(leaguePlayerPool).ToList();
+            List<Player> theirOriginalStartingRoster = theirTeamPlayerPool.OptimalLineUp(leaguePlayerPool).ToList();
 
-            myTeamPlayerPool.CalculateDifferentials(TheirPlayers, MyPlayers, ref myStarterDifferential, ref myBenchDifferential);
-            theirTeamPlayerPool.CalculateDifferentials(MyPlayers, TheirPlayers, ref theirStarterDifferential, ref theirBenchDifferential);
+            //calculate original starting lineup points
+            decimal myOriginalStartingPoints = myOriginalStartingRoster.Sum(p => p.Points);
+            decimal theirOriginalStartingPoints = theirOriginalStartingRoster.Sum(p => p.Points);
 
-            MyStarterDifferential = myStarterDifferential;
-            MyBenchDifferential = myBenchDifferential;
-            TheirStarterDifferential = theirStarterDifferential;
-            TheirBenchDifferential = theirBenchDifferential;
+            //get new starting rosters
+            MyStartingRoster = myTeamPlayerPool.OptimalLineUp(leaguePlayerPool, TheirPlayers, MyPlayers);
+            TheirStartingRoster = theirTeamPlayerPool.OptimalLineUp(leaguePlayerPool, MyPlayers, TheirPlayers);
+
+            //calculate new starting lineup points
+            decimal myNewStartingPoints = MyStartingRoster.Sum(p => p.Points);
+            decimal theirNewStartingPoints = TheirStartingRoster.Sum(p => p.Points);
+
+            //calculate differentials
+            MyDifferential = myNewStartingPoints - myOriginalStartingPoints;
+            TheirDifferential = theirNewStartingPoints - theirOriginalStartingPoints;
+            CompositeDifferential = MyDifferential + TheirDifferential;
+        }
+
+        public string GetPlayersString(IEnumerable<Player> players)
+        {
+            //initialize string to return
+            string playersString = "";
+
+            //loop through players to build string
+            foreach (Player player in players)
+            {
+                //if (playersString != "") { playersString += "<br />"; }
+                playersString += "<p>" + player.Name + "</p>";
+            }
+
+            //return result
+            return playersString;
+        }
+
+        public override int GetHashCode()
+        {
+            int hashCode = (int)(
+                Math.Pow((double)MyPlayers.Count(), 2) + Math.Pow((double)TheirPlayers.Count(), 2) +
+                Math.Pow((double)MyDifferential, 2) + Math.Pow((double)TheirDifferential, 2) +
+                Math.Pow((double)CompositeDifferential, 2) + Math.Pow((double)Fairness, 2) +
+                Math.Pow((double)MyPlayers.Sum(p => p.Points), 2) + Math.Pow((double)TheirPlayers.Sum(p => p.Points), 2) +
+                Math.Pow((double)MyNameList.Length, 2) + Math.Pow((double)TheirNameList.Length, 2)
+            );
+
+            return hashCode;
+        }
+
+        public bool Equals(Trade other)
+        {
+            if (MyPlayers.Count() != other.MyPlayers.Count()) { return false; }
+            if (TheirPlayers.Count() != other.TheirPlayers.Count()) { return false; }
+
+            List<int> myPlayerIds = new List<int>();
+            List<int> myOtherPlayerIds = new List<int>();
+            foreach (Player player in MyPlayers) { myPlayerIds.Add(player.PlayerId); }
+            foreach (Player player in other.MyPlayers) { myOtherPlayerIds.Add(player.PlayerId); }
+
+            for (int i = 0; i < myPlayerIds.Count(); i++)
+            {
+                if (myPlayerIds[i] != myOtherPlayerIds[i]) { return false; }
+            }
+
+            List<int> theirPlayerIds = new List<int>();
+            List<int> theirOtherPlayerIds = new List<int>();
+            foreach (Player player in TheirPlayers) { theirPlayerIds.Add(player.PlayerId); }
+            foreach (Player player in other.TheirPlayers) { theirOtherPlayerIds.Add(player.PlayerId); }
+
+            for (int i = 0; i < theirPlayerIds.Count(); i++)
+            {
+                if (theirPlayerIds[i] != theirOtherPlayerIds[i]) { return false; }
+            }
+
+            return true;
         }
     }
 }

@@ -22,3 +22,11 @@ select,
 textarea {
     max-width: 280px;
 }
+
+.inline {
+    display: inline;
+}
+
+/*.btn {
+    height: 25px;
+}*/
