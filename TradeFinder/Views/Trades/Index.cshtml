@@ -1,5 +1,268 @@
 ﻿@model TradeFinder.ViewModels.TradeFilterView
 
+<script type="text/javascript" src="~/Scripts/TradeFinder.js"></script>
+<script>
+    $(document).ready(function() {
+        $("#divLoadingContainer").hide();
+
+        $("#btnFindTrades").click(function () {
+            $("#divLoadingContainer").show();
+            if (HasCurrentSessionPlayers() == "false")
+            {
+                ImportPlayers();
+            }
+            else
+            {
+                FindTrades();
+            }
+        });
+    });
+
+    function UpdateProgressBar(percentage, text)
+    {
+        $("#progressBarContent").attr("aria-valuenow", percentage);
+        $("#progressBarContent").attr("aria-valuemin", "0");
+        $("#progressBarContent").attr("aria-valuemax", "100");
+        $("#progressBarContent").width(percentage + "%");
+        $("#divLoadingStatus").text(text);
+    }
+
+    function HasCurrentSessionPlayers()
+    {
+        var hasCurrentSessionPlayers;
+
+        $.ajax({
+            type: "POST",
+            url: "/Trades/HasCurrentSessionPlayers",
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify({ id: @Model.LeagueId }),
+            async: false,
+            success: function(data){
+                if (data.HasCurrentSessionPlayers)
+                {
+                    hasCurrentSessionPlayers = "true";
+                } else {
+                    hasCurrentSessionPlayers = "false";
+                }
+            }
+        });
+
+        return hasCurrentSessionPlayers;
+    }
+
+    function ImportPlayers()
+    {
+        $.ajax({
+            type: "POST",
+            url: "/Trades/ImportQuarterbacks",
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify({ id: @Model.LeagueId }),
+            beforeSend: function(data){
+                UpdateProgressBar("0", "Importing quarterbacks from Numberfire projections...");
+            },
+            success: function(data){
+                ImportRunningBacks();
+            }
+        });
+    }
+
+    function ImportRunningBacks()
+    {
+        $.ajax({
+            type: "POST",
+            url: "/Trades/ImportRunningBacks",
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify({ id: @Model.LeagueId }),
+            beforeSend: function(){
+                UpdateProgressBar("10", "Importing running backs from Numberfire projections...");
+            },
+            success: function(){
+                ImportWideReceivers();
+            }
+        });
+    }
+
+    function ImportWideReceivers()
+    {
+        $.ajax({
+            type: "POST",
+            url: "/Trades/ImportWideReceivers",
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify({ id: @Model.LeagueId }),
+            beforeSend: function(){
+                UpdateProgressBar("20", "Importing wide receivers from Numberfire projections...");
+            },
+            success: function(){
+                ImportTightEnds();
+            }
+        });
+    }
+
+    function ImportTightEnds()
+    {
+        $.ajax({
+            type: "POST",
+            url: "/Trades/ImportTightEnds",
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify({ id: @Model.LeagueId }),
+            beforeSend: function(){
+                UpdateProgressBar("30", "Importing tight ends from Numberfire projections...");
+            },
+            success: function(){
+                SetTeamsPlayers();
+            }
+        });
+    }
+
+    function SetTeamsPlayers()
+    {
+        $.ajax({
+            type: "POST",
+            url: "/Trades/SetTeamsPlayers",
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify({ id: @Model.LeagueId }),
+            beforeSend: function(){
+                UpdateProgressBar("40", "Assigning players to teams...");
+            },
+            success: function(){
+                CalculateTradeValues();
+            }
+        });
+    }
+
+    function CalculateTradeValues()
+    {
+        $.ajax({
+            type: "POST",
+            url: "/Trades/CalculateTradeValues",
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify({ id: @Model.LeagueId }),
+            beforeSend: function(){
+                UpdateProgressBar("50", "Calculating trade value for players...");
+            },
+            success: function(){
+                //CompleteProgressBar();
+                FindTrades();
+            }
+        });
+    }
+
+    function CompleteProgressBar()
+    {
+        $.when( UpdateProgressBar("100", "Complete!") ).done(function() {
+            setTimeout(function() {
+                $("#divLoadingContainer").hide();
+            }, 1000);
+        });
+    }
+
+    function GetOtherTeamsIds(myTeamId, otherTeamId)
+    {
+        var otherTeamIds = [];
+
+        $.ajax({
+            type: "POST",
+            url: "/Trades/GetOtherTeamsIds",
+            contentType: "application/json; charset=utf-8",
+            async: false,
+            data: JSON.stringify({ myTeamId: myTeamId, otherTeamId: otherTeamId }),
+            success: function(data){
+                $.each(data.OtherTeamIds,function(index, id){
+                    otherTeamIds.push(id);
+                });
+            }
+        });
+
+        return otherTeamIds;
+    }
+
+    function GetTeamName(teamId)
+    {
+        var teamName;
+
+        $.ajax({
+            type: "POST",
+            url: "/Trades/GetTeamName",
+            contentType: "application/json; charset=utf-8",
+            async: false,
+            data: JSON.stringify({ teamId: teamId }),
+            success: function(data){
+                teamName = data.TeamName;
+            }
+        });
+
+        return teamName;
+    }
+
+    function FindTrades()
+    {
+        //for each team
+        //for each trade type (1v1, 1v2, etc...)
+        //set progress bar text and percentage
+        //find trades
+
+        UpdateProgressBar("0", "");
+        $("#tblTrades").find("tr:gt(0)").remove();
+        var myTeamId = $("#ddlMyTeam :selected").val();
+        var otherTeamSelection = $("#ddlOtherTeam :selected").val();
+        if (otherTeamSelection == "") { otherTeamSelection = -1; }
+        var otherTeamIds = GetOtherTeamsIds(myTeamId, otherTeamSelection);
+
+        $.each(otherTeamIds, function(index, otherTeamId) {
+            var teamName = GetTeamName(otherTeamId);
+            FindOneForOneTrades(myTeamId, otherTeamId, teamName);
+            FindOneForTwoTrades(myTeamId, otherTeamId, teamName);
+            FindOneForThreeTrades(myTeamId, otherTeamId, teamName);
+            FindTwoForOneTrades(myTeamId, otherTeamId, teamName);
+            FindTwoForTwoTrades(myTeamId, otherTeamId, teamName);
+            FindTwoForThreeTrades(myTeamId, otherTeamId, teamName);
+            FindThreeForOneTrades(myTeamId, otherTeamId, teamName);
+            FindThreeForTwoTrades(myTeamId, otherTeamId, teamName);
+            FindThreeForThreeTrades(myTeamId, otherTeamId, teamName);
+
+            if (index + 1 == otherTeamIds.length) { CompleteProgressBar(); }
+        });
+    }
+
+    function FindOneForOneTrades(myTeamId, otherTeamId, teamName) { FindAbstractTrades("/Trades/FindOneForOneTrades", myTeamId, otherTeamId, teamName, "55", "One for One") }
+    function FindOneForTwoTrades(myTeamId, otherTeamId, teamName) { FindAbstractTrades("/Trades/FindOneForTwoTrades", myTeamId, otherTeamId, teamName, "60", "One for Two") }
+    function FindOneForThreeTrades(myTeamId, otherTeamId, teamName) { FindAbstractTrades("/Trades/FindOneForThreeTrades", myTeamId, otherTeamId, teamName, "65", "One for Three") }
+    function FindTwoForOneTrades(myTeamId, otherTeamId, teamName) { FindAbstractTrades("/Trades/FindTwoForOneTrades", myTeamId, otherTeamId, teamName, "70", "Two for One") }
+    function FindTwoForTwoTrades(myTeamId, otherTeamId, teamName) { FindAbstractTrades("/Trades/FindTwoForTwoTrades", myTeamId, otherTeamId, teamName, "75", "Two for Two") }
+    function FindTwoForThreeTrades(myTeamId, otherTeamId, teamName) { FindAbstractTrades("/Trades/FindTwoForThreeTrades", myTeamId, otherTeamId, teamName, "80", "Two for Three") }
+    function FindThreeForOneTrades(myTeamId, otherTeamId, teamName) { FindAbstractTrades("/Trades/FindThreeForOneTrades", myTeamId, otherTeamId, teamName, "85", "Three for One") }
+    function FindThreeForTwoTrades(myTeamId, otherTeamId, teamName) { FindAbstractTrades("/Trades/FindThreeForTwoTrades", myTeamId, otherTeamId, teamName, "90", "Three for Two") }
+    function FindThreeForThreeTrades(myTeamId, otherTeamId, teamName) { FindAbstractTrades("/Trades/FindThreeForThreeTrades", myTeamId, otherTeamId, teamName, "95", "Three for Three") }
+
+    function FindAbstractTrades(url, myTeamId, otherTeamId, teamName, percentage, tradeTypeString)
+    {
+        $.ajax({
+            type: "POST",
+            url: url,
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify({ leagueId: @Model.LeagueId, myTeamId: myTeamId, otherTeamId: otherTeamId }),
+            beforeSend: function(){
+                UpdateProgressBar(percentage, "Finding " + tradeTypeString + " Trades with " + teamName + "...");
+            },
+            success: function(data){
+                $.each(data.Trades,function(index, trade){
+                    AddTradeToTable(trade.MyPlayersHtml, trade.TheirPlayersHtml, trade.MyDifferential, trade.TheirDifferential, trade.Fairness)
+                });
+            },
+            error: function(xhr, status, error) {
+                alert(xhr.responseText);
+            }
+        });
+    }
+
+    function AddTradeToTable(myPlayers, theirPlayers, myDifferential, theirDifferential, fairness)
+    {
+        $("#tblTrades.table").append(
+            "<tr><td>" + myPlayers + "</td><td>" + theirPlayers + "</td><td>" + myDifferential + "</td><td>" + theirDifferential + "</td><td class=\"hidden-sm hidden-xs\">" + fairness + "</td></tr>"
+        );
+    }
+</script>
+
 @{
     ViewBag.Title = "Index";
 }
@@ -16,11 +279,15 @@
             <h3 class="panel-title">Filters</h3>
         </div>
         <div class="panel-body form-inline">
-            @Html.DropDownListFor(model => model.MyTeamId, (SelectList)ViewBag.MyTeamOptions, new { @class = "form-control" })
-            @Html.DropDownListFor(model => model.OtherTeamId, (SelectList)ViewBag.OtherTeamOptions, "-- All Teams --", new { @class = "form-control" })
-            @*<span class="input-group-btn">*@
-                <input type="submit" value="Find Trades" class="btn btn-success" />
-            @*</span>*@
+            @Html.DropDownListFor(model => model.MyTeamId, (SelectList)ViewBag.MyTeamOptions, new { @class = "form-control", @id = "ddlMyTeam" })
+            @Html.DropDownListFor(model => model.OtherTeamId, (SelectList)ViewBag.OtherTeamOptions, "-- All Teams --", new { @class = "form-control", @id = "ddlOtherTeam" })
+            <input id="btnFindTrades" type="button" value="Find Trades" class="btn btn-success" />
+        </div>
+    </div>
+
+    <div>
+        <div id="completedDisplay" style="display: none">
+            <span class="glyphicon glyphicon-check"></span> Completed
         </div>
     </div>
 
@@ -29,17 +296,21 @@
             <h3 class="panel-title">Trades</h3>
         </div>
         <div class="panel-body">
-            <table class="table table-condensed table-hover table-responsive table-striped">
-                <tr>
-                    <th>Lost Players</th>
-                    <th>Gained Players</th>
-                    <th>My Points Gained</th>
-                    <th>Their Points Gained</th>
-                    <th>Fairness</th>
-                </tr>
-                @if (Model.Trades != null)
-                {
-                    foreach (var trade in Model.Trades)
+            <div id="divLoadingContainer">
+                <div id="divLoadingStatus"></div>
+                <div id="progressBarContainer" class="progress">
+                    <div id="progressBarContent" class="progress-bar progress-bar-striped active" role="progressbar"></div>
+                </div>
+            </div>
+                <table id="tblTrades" class="table table-condensed table-hover table-responsive table-striped">
+                    <tr>
+                        <th>Lost Players</th>
+                        <th>Gained Players</th>
+                        <th>My Points Gained</th>
+                        <th>Their Points Gained</th>
+                        <th class="hidden-sm hidden-xs">Fairness</th>
+                    </tr>
+                    @*@foreach (var trade in Model.Trades)
                     {
                         <tr>
                             <td>
@@ -56,11 +327,10 @@
                             </td>
                             <td>@trade.MyDifferential</td>
                             <td>@trade.TheirDifferential</td>
-                            <td>@trade.Fairness</td>
+                            <td class="hidden-sm hidden-xs">@trade.Fairness</td>
                         </tr>
-                    }
-                }
-            </table>
+                    }*@
+                </table>
         </div>
     </div>
 }

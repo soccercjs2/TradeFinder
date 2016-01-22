@@ -55,7 +55,7 @@ namespace TradeFinder.NumberFire
             leaguePlayerPool.CalculateTradeValues();
         }
 
-        private void ImportQbHtml()
+        public void ImportQbHtml()
         {
             //get qb data
             string html = "";
@@ -105,7 +105,7 @@ namespace TradeFinder.NumberFire
             }
         }
 
-        private void ImportRbHtml()
+        public void ImportRbHtml()
         {
             //get rb data
             string html = "";
@@ -153,7 +153,7 @@ namespace TradeFinder.NumberFire
             }
         }
 
-        private void ImportWrHtml()
+        public void ImportWrHtml()
         {
             //get wr data
             string html = "";
@@ -201,7 +201,7 @@ namespace TradeFinder.NumberFire
             }
         }
 
-        private void ImportTeHtml()
+        public void ImportTeHtml()
         {
             //get te data
             string html = "";

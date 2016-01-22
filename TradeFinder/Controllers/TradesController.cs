@@ -28,13 +28,6 @@ namespace TradeFinder.Controllers
             }
 
             League league = db.Leagues.Find(id);
-            string sessionId = HttpContext.Session.SessionID;
-
-            if (league.CurrentSessionId != sessionId)
-            {
-                NumberFireConnection numberFireConnection = new NumberFireConnection(league.LeagueId, sessionId);
-                numberFireConnection.ImportPlayers();
-            }
 
             //create select lists with teams
             Team myTeam = league.Teams.Where(t => t.MyTeam).FirstOrDefault();
@@ -44,7 +37,7 @@ namespace TradeFinder.Controllers
             ViewBag.MyTeamOptions = myTeamOptions;
             ViewBag.OtherTeamOptions = otherTeamOptions;
 
-            TradeFilterView tradeListView = new TradeFilterView();
+            TradeFilterView tradeListView = new TradeFilterView(league.LeagueId);
             tradeListView.LeagueId = league.LeagueId;
             tradeListView.MyTeamId = myTeam.TeamId;
 
@@ -63,222 +56,236 @@ namespace TradeFinder.Controllers
             ViewBag.MyTeamOptions = myTeamOptions;
             ViewBag.OtherTeamOptions = otherTeamOptions;
 
-            if (ModelState.IsValid)
-            {
-                tradeListView.FindTrades();
+            return View(tradeListView);
+        }
 
-                return View(tradeListView);
+        [HttpPost]
+        public JsonResult HasCurrentSessionPlayers(int id)
+        {
+            string sessionId = HttpContext.Session.SessionID;
+            League league = db.Leagues.Find(id);
+
+            return Json(new { HasCurrentSessionPlayers = (sessionId == league.CurrentSessionId) });
+        }
+
+        [HttpPost]
+        public void ImportQuarterbacks(int id)
+        {
+            string sessionId = HttpContext.Session.SessionID;
+            NumberFireConnection numberFireConnection = new NumberFireConnection(id, sessionId);
+            numberFireConnection.ImportQbHtml();
+        }
+
+        [HttpPost]
+        public void ImportRunningBacks(int id)
+        {
+            string sessionId = HttpContext.Session.SessionID;
+            NumberFireConnection numberFireConnection = new NumberFireConnection(id, sessionId);
+            numberFireConnection.ImportRbHtml();
+        }
+
+        [HttpPost]
+        public void ImportWideReceivers(int id)
+        {
+            string sessionId = HttpContext.Session.SessionID;
+            NumberFireConnection numberFireConnection = new NumberFireConnection(id, sessionId);
+            numberFireConnection.ImportWrHtml();
+        }
+
+        [HttpPost]
+        public void ImportTightEnds(int id)
+        {
+            string sessionId = HttpContext.Session.SessionID;
+            NumberFireConnection numberFireConnection = new NumberFireConnection(id, sessionId);
+            numberFireConnection.ImportTeHtml();
+        }
+
+        [HttpPost]
+        public void SetTeamsPlayers(int id)
+        {
+            LeaguePlayerPool leaguePlayerPool = new LeaguePlayerPool(id);
+            leaguePlayerPool.SetTeamsPlayers();
+        }
+
+        [HttpPost]
+        public void CalculateTradeValues(int id)
+        {
+            LeaguePlayerPool leaguePlayerPool = new LeaguePlayerPool(id);
+            leaguePlayerPool.CalculateTradeValues();
+        }
+
+        [HttpPost]
+        public JsonResult GetOtherTeamsIds(int myTeamId, int otherTeamId)
+        {
+            //find my team and create variable to fill with other teams
+            Team myTeam = db.Teams.Find(myTeamId);
+            List<Team> otherTeams = new List<Team>();
+
+            //if they selected team to trade with, add that team to list
+            if (otherTeamId != -1)
+            {
+                otherTeams.Add(db.Teams.Find(otherTeamId));
             }
+            //else add all other teams that aren't my team to the list
             else
             {
-                return View(tradeListView);
+                League league = db.Leagues.Find(myTeam.LeagueId);
+                otherTeams = league.Teams.ToList();
+                otherTeams.Remove(myTeam);
             }
-        }
 
-        public string MakeNumberFirePlayer(string player, string position, string team)
-        {
-            return string.Format("{0} ({1}, {2})", player, position, team);
-        }
-
-        private void CleanQBTable(ref DataTable table)
-        {
-            table.Columns.Remove("OverallRank");
-            table.Columns.Remove("PositionRank");
-            table.Columns.Remove("Completions/Attempts");
-            table.Columns.Remove("PassingYards");
-            table.Columns.Remove("PassingTouchdowns");
-            table.Columns.Remove("Interceptions");
-            table.Columns.Remove("RushingAttempts");
-            table.Columns.Remove("RushingYards");
-            table.Columns.Remove("RushingTouchdowns");
-            table.Columns.Remove("ConfidenceInterval");
-        }
-
-        private void CleanRBWRTable(ref DataTable table)
-        {
-            table.Columns.Remove("OverallRank");
-            table.Columns.Remove("PositionRank");
-            table.Columns.Remove("RushingAttempts");
-            table.Columns.Remove("RushingYards");
-            table.Columns.Remove("RushingTouchdowns");
-            table.Columns.Remove("Receptions");
-            table.Columns.Remove("ReceivingYards");
-            table.Columns.Remove("ReceivingTouchdowns");
-            table.Columns.Remove("ConfidenceInterval");
-        }
-
-        private void CleanTETable(ref DataTable table)
-        {
-            table.Columns.Remove("OverallRank");
-            table.Columns.Remove("PositionRank");
-            table.Columns.Remove("Receptions");
-            table.Columns.Remove("ReceivingYards");
-            table.Columns.Remove("ReceivingTouchdowns");
-            table.Columns.Remove("ConfidenceInterval");
-        }
-
-        private void AssignPlayersToTeams(int? leagueId, ref DataTable quarterbacks, ref DataTable runningBacks, ref DataTable wideReceivers, ref DataTable tightEnds, ref int myTeamId)
-        {
-            //get league to get teams
-            League league = db.Leagues.Find(leagueId);
-            List<TeamView> teamViews = new List<TeamView>();
-
-            //for each team, create TeamView
-            foreach (Team team in league.Teams)
+            //put other team ids into array for ajax
+            int[] otherTeamIds = new int[otherTeams.Count];
+            for (int i = 0; i < otherTeamIds.Length; i++)
             {
-                teamViews.Add(new TeamView(team.TeamId, quarterbacks, runningBacks, wideReceivers, tightEnds));
-
-                //if the team is my team, record TeamId
-                if (team.MyTeam) { myTeamId = team.TeamId; }
+                otherTeamIds[i] = otherTeams[i].TeamId;
             }
 
-            //add team column to position tables
-            quarterbacks.Columns.Add("Team", typeof(int));
-            runningBacks.Columns.Add("Team", typeof(int));
-            wideReceivers.Columns.Add("Team", typeof(int));
-            tightEnds.Columns.Add("Team", typeof(int));
-
-            //add team column to position tables
-            quarterbacks.Columns.Add("TradeValue", typeof(decimal));
-            runningBacks.Columns.Add("TradeValue", typeof(decimal));
-            wideReceivers.Columns.Add("TradeValue", typeof(decimal));
-            tightEnds.Columns.Add("TradeValue", typeof(decimal));
-
-            //assign players to teams
-            foreach (TeamView teamView in teamViews)
-            {
-                foreach (DataRow teamRow in teamView.TeamTable.Rows)
-                {
-                    //create player with numberfire format
-                    string numberfirePlayer = MakeNumberFirePlayer(teamRow["Player"].ToString(), teamRow["Position"].ToString(), teamRow["Team"].ToString());
-                    string query = "Player = '" + numberfirePlayer + "'";
-
-                    //try and match player to player in position pool
-                    DataRow qbRow = quarterbacks.Select(query).FirstOrDefault();
-                    DataRow rbRow = runningBacks.Select(query).FirstOrDefault();
-                    DataRow wrRow = wideReceivers.Select(query).FirstOrDefault();
-                    DataRow teRow = tightEnds.Select(query).FirstOrDefault();
-
-                    //if match is found, assign team id
-                    if (qbRow != null) { qbRow["Team"] = teamView.Team.TeamId; qbRow.AcceptChanges(); }
-                    if (rbRow != null) { rbRow["Team"] = teamView.Team.TeamId; rbRow.AcceptChanges(); }
-                    if (wrRow != null) { wrRow["Team"] = teamView.Team.TeamId; wrRow.AcceptChanges(); }
-                    if (teRow != null) { teRow["Team"] = teamView.Team.TeamId; teRow.AcceptChanges(); }
-                }
-            }
+            return Json(new { OtherTeamIds = otherTeamIds });
         }
 
-        private void CalculateTradeValuesAndSort(DataTable positionTable, DataRow waiverRow, int myTeamId, ref DataTable myPlayers, ref DataTable players)
+        [HttpPost]
+        public JsonResult GetTeamName(int teamId)
         {
-            //calculate trade values for quarterbacks
-            foreach (DataRow row in positionTable.Rows)
-            {
-                row["TradeValue"] = (decimal)row["FantasyPoints"] - (decimal)waiverRow["FantasyPoints"];
-                row.AcceptChanges();
+            //find my team and create variable to fill with other teams
+            Team myTeam = db.Teams.Find(teamId);
 
-                //if quarterback is on a team and has a positive trade value, add quarterback to player table
-                if (row["Team"] != DBNull.Value && (decimal)row["TradeValue"] >= 0)
-                {
-                    //if the player is on my team, add it to my team
-                    if ((int)row["Team"] == myTeamId)
-                    {
-                        myPlayers.ImportRow(row);
-                        myPlayers.AcceptChanges();
-                    }
-                    //if the player is not on my team, add to player pool
-                    else
-                    {
-                        players.ImportRow(row);
-                        players.AcceptChanges();
-                    }
-                }
-            }
+            return Json(new { TeamName = myTeam.Name });
         }
 
-        private void AddColumnsToPlayerTable(ref DataTable table)
+        [HttpPost]
+        public JsonResult FindOneForOneTrades(int leagueId, int myTeamId, int otherTeamId)
         {
-            //create identity column
-            DataColumn playerId = new DataColumn();
-            playerId.ColumnName = "PlayerId";
-            playerId.DataType = typeof(int);
-            playerId.AutoIncrement = true;
-            playerId.AutoIncrementSeed = 1;
-            playerId.AutoIncrementStep = 1;
+            //create player pools to find trades
+            LeaguePlayerPool leaguePlayerPool = new LeaguePlayerPool(leagueId);
+            TeamPlayerPool myTeamPlayerPool = new TeamPlayerPool(myTeamId);
+            TeamPlayerPool theirTeamPlayerPool = new TeamPlayerPool(otherTeamId);
 
-            //add column to table
-            table.Columns.Add(playerId);
+            //find trades
+            List<TradeView> trades = leaguePlayerPool.FindTrades(myTeamPlayerPool, theirTeamPlayerPool, myTeamPlayerPool.OnePlayerTradePool, theirTeamPlayerPool.OnePlayerTradePool);
 
-            //add other relevant columns
-            table.Columns.Add("Player", typeof(string));
-            table.Columns.Add("FantasyPoints", typeof(decimal));
-            table.Columns.Add("Team", typeof(int));
-            table.Columns.Add("TradeValue", typeof(decimal));
+            //return Json object with found trades
+            return Json(new { Trades = trades });
         }
 
-        private DataTable FindTrades(DataTable myPlayers, DataTable theirPlayers)
+        [HttpPost]
+        public JsonResult FindOneForTwoTrades(int leagueId, int myTeamId, int otherTeamId)
         {
-            DataTable trades = new DataTable();
-            DataTable oneForOneTrades = OneForOneTrades(myPlayers, theirPlayers);
+            //create player pools to find trades
+            LeaguePlayerPool leaguePlayerPool = new LeaguePlayerPool(leagueId);
+            TeamPlayerPool myTeamPlayerPool = new TeamPlayerPool(myTeamId);
+            TeamPlayerPool theirTeamPlayerPool = new TeamPlayerPool(otherTeamId);
 
-            return trades;
+            //find trades
+            List<TradeView> trades = leaguePlayerPool.FindTrades(myTeamPlayerPool, theirTeamPlayerPool, myTeamPlayerPool.OnePlayerTradePool, theirTeamPlayerPool.TwoPlayerTradePool);
+
+            //return Json object with found trades
+            return Json(new { Trades = trades });
         }
 
-        private DataTable OneForOneTrades(DataTable myPlayers, DataTable theirPlayers)
+        [HttpPost]
+        public JsonResult FindOneForThreeTrades(int leagueId, int myTeamId, int otherTeamId)
         {
-            DataTable trades = new DataTable();
-            trades.Columns.Add("MyTeamName", typeof(string));
-            trades.Columns.Add("TheirTeamName", typeof(string));
-            trades.Columns.Add("MyPlayers", typeof(string));
-            trades.Columns.Add("TheirPlayers", typeof(string));
-            trades.Columns.Add("Fairness", typeof(decimal));
-            trades.Columns.Add("MyFantasyPointsDiff", typeof(decimal));
-            trades.Columns.Add("TheirFantasyPointsDiff", typeof(decimal));
+            //create player pools to find trades
+            LeaguePlayerPool leaguePlayerPool = new LeaguePlayerPool(leagueId);
+            TeamPlayerPool myTeamPlayerPool = new TeamPlayerPool(myTeamId);
+            TeamPlayerPool theirTeamPlayerPool = new TeamPlayerPool(otherTeamId);
 
-            foreach (DataRow myPlayer in myPlayers.Rows)
-            {
-                //get my team for teamname
-                int myTeamId = (int)myPlayer["Team"];
-                TeamView myTeam = new TeamView(myTeamId, (DataTable)Session["Quarterbacks"], (DataTable)Session["RunningBacks"], (DataTable)Session["WideReceivers"], (DataTable)Session["TightEnds"]);
+            //find trades
+            List<TradeView> trades = leaguePlayerPool.FindTrades(myTeamPlayerPool, theirTeamPlayerPool, myTeamPlayerPool.OnePlayerTradePool, theirTeamPlayerPool.ThreePlayerTradePool);
 
-                //get my team details
-                string myTeamName = myTeam.Team.Name;
-                string myPlayersList = myPlayer["Player"].ToString();
-                decimal myTradeValue = (decimal)myPlayer["TradeValue"];
+            //return Json object with found trades
+            return Json(new { Trades = trades });
+        }
 
-                //get their tradable characters
-                DataRow[] theirTradablePlayers = theirPlayers.Select("TradeValue <=" + (myTradeValue + 5) + " And TradeValue >= " + (myTradeValue - 5), "TradeValue DESC");
+        [HttpPost]
+        public JsonResult FindTwoForOneTrades(int leagueId, int myTeamId, int otherTeamId)
+        {
+            //create player pools to find trades
+            LeaguePlayerPool leaguePlayerPool = new LeaguePlayerPool(leagueId);
+            TeamPlayerPool myTeamPlayerPool = new TeamPlayerPool(myTeamId);
+            TeamPlayerPool theirTeamPlayerPool = new TeamPlayerPool(otherTeamId);
 
-                //loop through each tradable character
-                foreach (DataRow theirPlayer in theirTradablePlayers)
-                {
-                    //create datarow lists for point calculations
-                    List<DataRow> myPlayersRows = new List<DataRow>();
-                    List<DataRow> theirPlayersRows = new List<DataRow>();
+            //find trades
+            List<TradeView> trades = leaguePlayerPool.FindTrades(myTeamPlayerPool, theirTeamPlayerPool, myTeamPlayerPool.TwoPlayerTradePool, theirTeamPlayerPool.OnePlayerTradePool);
 
-                    //add players to rows lists
-                    myPlayersRows.Add(myPlayer);
-                    theirPlayersRows.Add(theirPlayer);
+            //return Json object with found trades
+            return Json(new { Trades = trades });
+        }
 
-                    //get their team for teamname
-                    int theirTeamId = (int)theirPlayer["Team"];
-                    TeamView theirTeam = new TeamView(theirTeamId, (DataTable)Session["Quarterbacks"], (DataTable)Session["RunningBacks"], (DataTable)Session["WideReceivers"], (DataTable)Session["TightEnds"]);
+        [HttpPost]
+        public JsonResult FindTwoForTwoTrades(int leagueId, int myTeamId, int otherTeamId)
+        {
+            //create player pools to find trades
+            LeaguePlayerPool leaguePlayerPool = new LeaguePlayerPool(leagueId);
+            TeamPlayerPool myTeamPlayerPool = new TeamPlayerPool(myTeamId);
+            TeamPlayerPool theirTeamPlayerPool = new TeamPlayerPool(otherTeamId);
 
-                    //create trade row
-                    DataRow trade = trades.NewRow();
-                    trade["MyTeamName"] = myTeamName;
-                    trade["MyPlayers"] = myPlayersList;
-                    trade["TheirTeamName"] = theirTeam.Team.Name;
-                    trade["TheirPlayers"] = theirPlayer["Player"];
-                    trade["Fairness"] = myTradeValue - (decimal)theirPlayer["TradeValue"];
-                    trade["MyFantasyPointsDiff"] = myTeam.OptimalLineUpPoints(theirPlayersRows, myPlayersRows);
-                    trade["TheirFantasyPointsDiff"] = theirTeam.OptimalLineUpPoints(myPlayersRows, theirPlayersRows); ;
+            //find trades
+            List<TradeView> trades = leaguePlayerPool.FindTrades(myTeamPlayerPool, theirTeamPlayerPool, myTeamPlayerPool.TwoPlayerTradePool, theirTeamPlayerPool.TwoPlayerTradePool);
 
-                    trades.Rows.Add(trade);
-                }
+            //return Json object with found trades
+            return Json(new { Trades = trades });
+        }
 
-            }
+        [HttpPost]
+        public JsonResult FindTwoForThreeTrades(int leagueId, int myTeamId, int otherTeamId)
+        {
+            //create player pools to find trades
+            LeaguePlayerPool leaguePlayerPool = new LeaguePlayerPool(leagueId);
+            TeamPlayerPool myTeamPlayerPool = new TeamPlayerPool(myTeamId);
+            TeamPlayerPool theirTeamPlayerPool = new TeamPlayerPool(otherTeamId);
 
-            return trades;
+            //find trades
+            List<TradeView> trades = leaguePlayerPool.FindTrades(myTeamPlayerPool, theirTeamPlayerPool, myTeamPlayerPool.TwoPlayerTradePool, theirTeamPlayerPool.ThreePlayerTradePool);
+
+            //return Json object with found trades
+            return Json(new { Trades = trades });
+        }
+
+        [HttpPost]
+        public JsonResult FindThreeForOneTrades(int leagueId, int myTeamId, int otherTeamId)
+        {
+            //create player pools to find trades
+            LeaguePlayerPool leaguePlayerPool = new LeaguePlayerPool(leagueId);
+            TeamPlayerPool myTeamPlayerPool = new TeamPlayerPool(myTeamId);
+            TeamPlayerPool theirTeamPlayerPool = new TeamPlayerPool(otherTeamId);
+
+            //find trades
+            List<TradeView> trades = leaguePlayerPool.FindTrades(myTeamPlayerPool, theirTeamPlayerPool, myTeamPlayerPool.ThreePlayerTradePool, theirTeamPlayerPool.OnePlayerTradePool);
+
+            //return Json object with found trades
+            return Json(new { Trades = trades });
+        }
+
+        [HttpPost]
+        public JsonResult FindThreeForTwoTrades(int leagueId, int myTeamId, int otherTeamId)
+        {
+            //create player pools to find trades
+            LeaguePlayerPool leaguePlayerPool = new LeaguePlayerPool(leagueId);
+            TeamPlayerPool myTeamPlayerPool = new TeamPlayerPool(myTeamId);
+            TeamPlayerPool theirTeamPlayerPool = new TeamPlayerPool(otherTeamId);
+
+            //find trades
+            List<TradeView> trades = leaguePlayerPool.FindTrades(myTeamPlayerPool, theirTeamPlayerPool, myTeamPlayerPool.ThreePlayerTradePool, theirTeamPlayerPool.TwoPlayerTradePool);
+
+            //return Json object with found trades
+            return Json(new { Trades = trades });
+        }
+
+        [HttpPost]
+        public JsonResult FindThreeForThreeTrades(int leagueId, int myTeamId, int otherTeamId)
+        {
+            //create player pools to find trades
+            LeaguePlayerPool leaguePlayerPool = new LeaguePlayerPool(leagueId);
+            TeamPlayerPool myTeamPlayerPool = new TeamPlayerPool(myTeamId);
+            TeamPlayerPool theirTeamPlayerPool = new TeamPlayerPool(otherTeamId);
+
+            //find trades
+            List<TradeView> trades = leaguePlayerPool.FindTrades(myTeamPlayerPool, theirTeamPlayerPool, myTeamPlayerPool.ThreePlayerTradePool, theirTeamPlayerPool.ThreePlayerTradePool);
+
+            //return Json object with found trades
+            return Json(new { Trades = trades });
         }
     }
 }

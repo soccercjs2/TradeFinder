@@ -8,6 +8,8 @@ using System.Net;
 using System.Web;
 using TradeFinder.Data;
 using TradeFinder.Models;
+using TradeFinder.NumberFire;
+using TradeFinder.ViewModels;
 
 namespace TradeFinder.PlayerPool
 {
@@ -20,7 +22,10 @@ namespace TradeFinder.PlayerPool
 
         public LeaguePlayerPool(int leagueId)
         {
+            //get league
             League = db.Leagues.Find(leagueId);
+
+            //find players loaded in the current session
             Players = db.Players.Where(p => p.LeagueId == League.LeagueId && p.SessionId == League.CurrentSessionId).ToList();
         }
 
@@ -189,15 +194,15 @@ namespace TradeFinder.PlayerPool
                 TeamPlayerPool otherTeamPlayerPool = new TeamPlayerPool(otherTeam.TeamId);
 
                 //find trades with this team
-                FindTrades(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.OnePlayerTradePool, otherTeamPlayerPool.OnePlayerTradePool); //1 for 1
-                FindTrades(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.OnePlayerTradePool, otherTeamPlayerPool.TwoPlayerTradePool); //1 for 2
-                FindTrades(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.OnePlayerTradePool, otherTeamPlayerPool.ThreePlayerTradePool); //1 for 3
-                FindTrades(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.TwoPlayerTradePool, otherTeamPlayerPool.OnePlayerTradePool); //2 for 1
-                FindTrades(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.TwoPlayerTradePool, otherTeamPlayerPool.TwoPlayerTradePool); //2 for 2
-                FindTrades(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.TwoPlayerTradePool, otherTeamPlayerPool.ThreePlayerTradePool); //2 for 3
-                FindTrades(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.ThreePlayerTradePool, otherTeamPlayerPool.OnePlayerTradePool); //3 for 1
-                FindTrades(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.ThreePlayerTradePool, otherTeamPlayerPool.TwoPlayerTradePool); //3 for 2
-                FindTrades(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.ThreePlayerTradePool, otherTeamPlayerPool.ThreePlayerTradePool); //3 for 3
+                FindTradesOld(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.OnePlayerTradePool, otherTeamPlayerPool.OnePlayerTradePool); //1 for 1
+                FindTradesOld(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.OnePlayerTradePool, otherTeamPlayerPool.TwoPlayerTradePool); //1 for 2
+                FindTradesOld(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.OnePlayerTradePool, otherTeamPlayerPool.ThreePlayerTradePool); //1 for 3
+                FindTradesOld(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.TwoPlayerTradePool, otherTeamPlayerPool.OnePlayerTradePool); //2 for 1
+                FindTradesOld(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.TwoPlayerTradePool, otherTeamPlayerPool.TwoPlayerTradePool); //2 for 2
+                FindTradesOld(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.TwoPlayerTradePool, otherTeamPlayerPool.ThreePlayerTradePool); //2 for 3
+                FindTradesOld(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.ThreePlayerTradePool, otherTeamPlayerPool.OnePlayerTradePool); //3 for 1
+                FindTradesOld(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.ThreePlayerTradePool, otherTeamPlayerPool.TwoPlayerTradePool); //3 for 2
+                FindTradesOld(ref trades, myTeamPlayerPool, otherTeamPlayerPool, myTeamPlayerPool.ThreePlayerTradePool, otherTeamPlayerPool.ThreePlayerTradePool); //3 for 3
             }
 
             return trades.OrderByDescending(t => t.CompositeDifferential).Distinct().ToList();
@@ -213,7 +218,30 @@ namespace TradeFinder.PlayerPool
         //    FindTrades(ref allTrades, myTradePool, theirTradePool, myTeamPlayerPool, theirTeamPlayerPool);
         //}
 
-        private void FindTrades(ref List<Trade> allTrades,
+        public List<TradeView> FindTrades(TeamPlayerPool myTeamPlayerPool, TeamPlayerPool theirTeamPlayerPool,
+                               IEnumerable<IEnumerable<Player>> myTradePool, IEnumerable<IEnumerable<Player>> theirTradePool)
+        {
+            List<TradeView> foundTrades = new List<TradeView>();
+            IEnumerable<Trade> trades = from mySideOfTrade in myTradePool
+                                        from theirSideOfTrade in theirTradePool
+                                        select (new Trade(mySideOfTrade, theirSideOfTrade));
+            trades = trades.Distinct();
+
+            foreach (Trade trade in trades)
+            {
+                if (Math.Abs(trade.Fairness) <= 5)
+                {
+                    trade.CalculateDifferentials(this, myTeamPlayerPool, theirTeamPlayerPool);
+                    if (trade.MyDifferential > 0) {
+                        foundTrades.Add(trade.GetTradeView());
+                    }
+                }
+            }
+
+            return foundTrades;
+        }
+
+        private void FindTradesOld(ref List<Trade> allTrades,
                                 TeamPlayerPool myTeamPlayerPool, TeamPlayerPool theirTeamPlayerPool,
                                 IEnumerable<IEnumerable<Player>> myTradePool, IEnumerable<IEnumerable<Player>> theirTradePool)
         {

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Web;
 using TradeFinder.Models;
 using TradeFinder.PlayerPool;
+using TradeFinder.ViewModels;
 
 namespace TradeFinder.Models
 {
@@ -66,8 +67,7 @@ namespace TradeFinder.Models
             //loop through players to build string
             foreach (Player player in players)
             {
-                //if (playersString != "") { playersString += "<br />"; }
-                playersString += "<p>" + player.Name + "</p>";
+                playersString += "<div>" + player.Name + "(" + player.TradeValue + ")</div>";
             }
 
             //return result
@@ -113,6 +113,19 @@ namespace TradeFinder.Models
             }
 
             return true;
+        }
+
+        public TradeView GetTradeView()
+        {
+            TradeView tradeView = new TradeView();
+
+            tradeView.MyPlayersHtml = MyNameList;
+            tradeView.TheirPlayersHtml = TheirNameList;
+            tradeView.MyDifferential = MyDifferential;
+            tradeView.TheirDifferential = TheirDifferential;
+            tradeView.Fairness = Fairness;
+
+            return tradeView;
         }
     }
 }
